@@ -16,7 +16,9 @@ JiT-H/16 모델의 활성화(activation)는 heavy-tail 분포(kurtosis mean=599.
 
 2) Failure mode 분석: SVDQuant, TR-DQ 등을 JiT/PixelDiT에 그냥 적용했을 때 어디서 깨지는지 정량 분석. 이게 두 번째 contribution
 
-### Idea 1
+### Idea 1 (Rotation + timestep smoothing(bucket) + Hessian SVD)
+
+
 
 3) 솔루션: 세 기법 조합.
     1) 단, 각 기법이 어느 failure mode를 푸는지 명확히 매핑(rotation→heavy-tail activation, timestep smoothing→PixelDiT의 후반 step outlier 증가, Hessian SVD→outlier 레이어 보존).
@@ -26,6 +28,6 @@ JiT-H/16 모델의 활성화(activation)는 heavy-tail 분포(kurtosis mean=599.
     1) JiT + PixelDiT(patch/pixel 둘 다) 두 모델에서 baseline 5-6개 대비 정량화.
     2) PixArt도 한 번 돌려서 "latent-space에서는 간단한 베이스라인으로도 충분하지만 pixel-space에서는 우리 방법이 필요하다"를 보여줌
 
-### Idea 2
+### Idea 2 (Activation aware scale quantization)
 
 * NVFP4 or MXFP4 로 Activation,Weight Quant하고 Outlier(Kurtosis) 높은것만 Activation scale을 더 정교한 것으로 반영하고 싶어, FP16 / BF16/FP32 처럼
