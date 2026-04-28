@@ -1,4 +1,72 @@
-# DiT Mixed-Precision A3W3 — Experimental Plan
+# DiT Mixed-Precision A3W3— Experimental Plan
+
+---
+
+## 0. Summary
+
+# [Exp Plan] DiT Mixed-Precision A3W3: Step-Conditional Optimization
+
+## 1. Project Overview
+* **Model:** PixArt-Sigma-XL-2-1024-MS (1024px, 10 Steps)
+* **Baseline:** NVFP4 W4A4 (FID 124.1, TPI 4.72s)
+* **Target:** A3W3 정밀도 달성 및 Pareto Frontier (W4A3, W3A4) 확장
+* **Eval Metric:** MJHQ-30K (n=100/1000), FID, CLIP, LPIPS, TPI, MB
+
+---
+
+## 2. Core Hypotheses (핵심 가설)
+* **H1 (Step-α):** Step-conditional SmoothQuant α가 Single α 대비 FID -5 이상의 이득을 준다.
+* **H2 (Step-LoRA):** Step-conditional LoRA가 동일 메모리 예산에서 W3A4 성능을 유의미하게 회복시킨다.
+* **H3 (FP3 Format):** FP3-E1M1 형식이 INT3보다 DiT의 Heavy-tailed Activation 분포를 더 잘 표현한다.
+* **H4 (PTQ Ceiling):** A3W3은 PTQ-only로는 불가능하며, Light LoRA-tuning이 필수적이다.
+
+---
+
+## 3. Phase Plan (단계별 추진 계획)
+
+### Phase 0 & 1: Baseline 강화 및 Step-α 검증
+| Exp | Configuration | 목적 |
+|:--- |:--- |:--- |
+| **0.x** | NVFP4 + SmoothQuant/AWQ/QuaRot | LLM-style 최신 Baseline 구축 |
+| **1.1** | Step-uniform α Grid Search | α 최적 범위 탐색 (Reference) |
+| **1.2** | Per-step α (10 independent calib) | Step별 최적화의 Upper Bound 확인 |
+| **1.4** | α(t) = MLP(step embedding) | adaLN 경로를 활용한 동적 α 제어 |
+
+### Phase 2 & 3: Format Ablation & LoRA Compensation
+| Exp | Configuration (W/A) | 전략 |
+|:--- |:--- |:--- |
+| **2.3** | NVFP4 / FP3-E1M1 | Balanced Format (Sign 1, Exp 1, Mant 1) 검증 |
+| **2.4** | NVFP4 / FP3-E0M2 | 0 근처 정밀도(Mantissa) 강화형 검증 |
+| **3.2** | Sensitivity-weighted Rank | 민감 레이어에 Rank 집중 할당 |
+| **3.4** | Step-low-rank ($L^{(t)} = \sum \alpha_k(t) U_k$) | Step별 변동성을 저차원 기저 결합으로 흡수 |
+
+### Phase 4 & 5: A3W3 도전 및 효율화
+* **A3W3도전:** Phase 1~3의 Best 조합 + Light LoRA Tuning (5k steps).
+* **Step Efficiency:** DeepCache(interval=2) 및 Tolerant Step(s7-s9) Skip 적용.
+
+---
+
+## 4. Sensitivity-Guided Strategy (민감도 기반 할당)
+* **Critical Points:** `mlp_fc2 (s1)`, `attn1_qkv (s1)` → **FP3-E1M1 + High Rank LoRA**
+* **Tolerant Points:** `attn2_out (all steps)`, `Late Steps (s7-s9)` → **INT3 + Low Rank LoRA**
+
+---
+## 5. Risk Management (Decision Tree)
+
+```mermaid
+graph TD
+    A["Phase 1: Step-alpha 효과 확인"] -->|Yes| B["Phase 2/3: 3-bit 최적화"]
+    A -->|No| A2["Step-wise 대신 Layer-wise alpha 집중"]
+    B --> C["Phase 4: A3W3 FID < 150 달성"]
+    C -->|Success| D["SOTA 달성: NeurIPS/CVPR 논문 작성"]
+    C -->|Fail| E["Mechanistic Analysis: DiT PTQ Ceiling 분석으로 Pivot"]
+```
+
+---
+
+# Detail
+
+---
 
 **Model**: PixArt-Sigma-XL-2-1024-MS · **Steps**: 10 · **Eval**: MJHQ-30K (n=100), FID/CLIP/PSNR/SSIM/LPIPS, TPI, MB
 **Baseline**: NVFP4 W4A4 (FID 124.1, TPI 4.72s)
