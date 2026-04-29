@@ -1,3 +1,37 @@
+
+# Summary
+
+## 3. 전체 실험의 공통 법칙
+
+### 법칙 1: Activation quantization이 weight quantization보다 훨씬 치명적
+- W4A3 FID=330–365 (catastrophic) vs W3A4 FID=209.8 (recoverable).
+- LoRA는 weight 오류만 보정 가능 (activation 오류 경로 밖).
+- **실용적 결론**: Activation format은 NVFP4(4-bit) 이하로 낮추지 말 것.
+
+### 법칙 2: SmoothQuant α=0.7이 DiT에서 최적
+- 비단조: 너무 낮으면(0.3/0.5) FID 악화, 너무 높으면(0.9) overflow.
+- α=0.7은 weight-activation 균형의 sweet spot.
+
+### 법칙 3: DeepCache는 PixArt-Sigma에서 본질적으로 손실적
+- FP16에서도 FID+148.9 — 모델 구조(dense attention + step-conditional adaLN)가 블록 residual 재사용에 부적합.
+- MLP adaLN이 74.2%를 차지하므로 FFN은 매 step 재계산이 필수.
+
+### 법칙 4: Quant 오류와 Cache 오류는 sub-additive (−50 FID)
+- Quant 오류 → Attn 지배 (79%); Cache 오류 → MLP 지배 (74%).
+- 두 오류가 서로 다른 layer type에서 발생 → FID space에서 부분 직교 → 합산보다 50 FID 작음.
+- **Implication**: Quant 개선이 Cache 오류를 완전히 보상하지 않음 → 결합 FID 개선의 ceiling 존재.
+
+### 법칙 5: LoRA rank=32가 W4A4 최적, 더 큰 rank는 이득 없음
+- rank=64 (8.2): FID=126.2 > rank=32 FID=120.3.
+- SVD 초기화 LoRA는 top-32 singular values로 weight 오류의 대부분을 포착.
+
+---
+
+
+---
+
+
+
 # Experiment Log — adaLN(Step)-aware Quant
 
 > **Live plan.** Based on `experiment_plan.md`. Each phase section is filled in
