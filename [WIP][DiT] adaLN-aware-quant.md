@@ -25,8 +25,17 @@
 - rank=64 (8.2): FID=126.2 > rank=32 FID=120.3.
 - SVD 초기화 LoRA는 top-32 singular values로 weight 오류의 대부분을 포착.
 
----
+```
+ quantization error는  attention part에 치중되어 있고, cache error 는 mlp 에 치중되어있어, selective cache (Only attention
+  + selective block + seletive time step)을 진행하고, activation 을 ablation quant하면 어떻게 하한인지알고싶어, weight는
+  INT4로 고정하고 activation만 INT16, INT8, INT6, INT4로 quant하면서 영향성 파악해줘
+```
 
+### AdaLN and step aware quant의 영향성은 잘 없음
+
+### Mixed Precision W4A4 + W3A4도 크게 이미지 향상이 없는 상황
+
+### Cache + Quant에서 attention vs mlp 로 나눠서 다르게 적용한 경향성을 파악해보자
 
 ---
 
