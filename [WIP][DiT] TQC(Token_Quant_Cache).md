@@ -56,6 +56,16 @@ $$
 
 ### Gumbel Softmax
 
+* Gumbel-Softmax는 이산적인 선택지($k$개) 중 하나를 샘플링하는 과정을 미분 가능하게 변환하는 Reparameterization Trick입니다.
+* Training based search
+    * "선택지를 골라야 하지만, 처음부터 끝까지 하나의 파이프라인으로 학습(End-to-End Learning)시키고 싶을 때" 활용
+    * Mixed-Precision Quantization (혼합 정밀도 양자화)
+        * "어떤 레이어에 어떤 비트(Bit)를 할당할 것인가?"를 결정할 때 쓰입니다.
+    * Conditional Computation (조건부 연산) & Dynamic Routing
+        * "이 연산을 할 것인가, 말 것인가(Skip/Cache)?" 혹은 "어느 경로로 보낼 것인가?"를 결정할 때 쓰입니다.
+    * Differentiable Neural Architecture Search (DNAS)
+        * "최적의 신경망 구조(Architecture) 자체를 인공지능이 찾게 만들자"는 연구 분야에서 쓰입니다. 
+
 1. 일반 Softmax (Static Distribution)
 
 * 단순히 입력 Logit ( $h_i$ )을 0과 1 사이의 확률값으로 변환합니다.
