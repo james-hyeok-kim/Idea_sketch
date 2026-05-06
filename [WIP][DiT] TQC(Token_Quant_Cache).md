@@ -53,3 +53,21 @@ $$
 | **Online Routing** (실시간 추론) | **Attention Score + Temporal Diff** | 추가 연산 비용이 거의 없어 추론 속도에 영향을 주지 않음. 매 타임스텝(t)마다 변하는 토큰의 중요도를 실시간으로 반영하여 {Q, C} 조합을 동적으로 결정하기에 최적. |
 | **Error Refinement** (오차 보정) | **Fisher Information** | Hessian의 효율적인 근사치로, 양자화 및 캐싱으로 발생한 오차를 Cache-LoRA가 어느 토큰에서 우선적으로 복구해야 할지(Prioritization) 판단하는 기준으로 적합. |
 | **System Evaluation** (시스템 평가) | **Jacobian Frobenius Norm** | 입력 변화가 출력층까지 미치는 영향도를 측정. 특정 블록의 연산 효율화가 전체 이미지 생성 품질(FID)에 미치는 파급 효과를 수치화할 때 활용. |
+
+### Gumbel Softmax
+
+1. 일반 Softmax (Static Distribution)
+
+* 단순히 입력 Logit ( $h_i$ )을 0과 1 사이의 확률값으로 변환합니다.
+* 결과는 항상 고정된(Deterministic) 분포입니다.
+
+$$P_i = \frac{\exp(h_i)}{\sum_{j=1}^k \exp(h_j)}$$
+
+2.  Gumbel-Softmax (Stochastic Approximation)
+
+* 입력 Logit에 Gumbel Noise ( $G_i$ )를 더해 무작위성을 부여하고,
+* Temperature ( $\tau$ )로 결과의 분포를 조절합니다.
+
+$$y_i = \frac{\exp((h_i + G_i) / \tau)}{\sum_{j=1}^k \exp((h_j + G_j) / \tau)}$$
+
+$$G_i = -\log(-\log(U_i)), \quad U_i \sim \text{Uniform}(0, 1)$$
