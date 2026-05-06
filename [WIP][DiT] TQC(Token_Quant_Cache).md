@@ -43,3 +43,13 @@ $$
 
 * 처음부터 복잡한 클러스터링을 구현하기보다는, 2번(Temporal Difference)으로 $S_i$를 구한 뒤,
 * 1번(통계적 Z-score 분할)을 적용하여 $\alpha, \beta$를 조절해 보시는 것을 권장합니다.
+
+
+### 📊 DiT 최적화를 위한 중요도(Saliency) 지표 전략적 추천
+
+| 연구 단계 (Usage) | 권장 지표 (Metric) | 상세 이유 (Reasoning) |
+| :--- | :--- | :--- |
+| **Offline Analysis** (연구/분석) | **Hessian Trace** | 모델의 수렴 안정성과 양자화 민감도를 분석하는 가장 정확한 이론적 근거 제공. 주로 논문의 Figure 1(Motivation) 작성을 위한 정적 프로파일링에 사용. |
+| **Online Routing** (실시간 추론) | **Attention Score + Temporal Diff** | 추가 연산 비용이 거의 없어 추론 속도에 영향을 주지 않음. 매 타임스텝(t)마다 변하는 토큰의 중요도를 실시간으로 반영하여 {Q, C} 조합을 동적으로 결정하기에 최적. |
+| **Error Refinement** (오차 보정) | **Fisher Information** | Hessian의 효율적인 근사치로, 양자화 및 캐싱으로 발생한 오차를 Cache-LoRA가 어느 토큰에서 우선적으로 복구해야 할지(Prioritization) 판단하는 기준으로 적합. |
+| **System Evaluation** (시스템 평가) | **Jacobian Frobenius Norm** | 입력 변화가 출력층까지 미치는 영향도를 측정. 특정 블록의 연산 효율화가 전체 이미지 생성 품질(FID)에 미치는 파급 효과를 수치화할 때 활용. |
